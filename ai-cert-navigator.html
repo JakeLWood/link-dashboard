@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CertQuest — Free AI Certifications Navigator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F1B2D;
+    --card:#1A2940;
+    --card-hover:#20324E;
+    --teal:#00D4AA;
+    --teal-dim:rgba(0,212,170,.14);
+    --amber:#FFB347;
+    --amber-dim:rgba(255,179,71,.15);
+    --white:#F4F8FC;
+    --muted:#8FA3BF;
+    --line:rgba(143,163,191,.18);
+    --radius:12px;
+    --font-body:'Inter',system-ui,sans-serif;
+    --font-head:'Space Grotesk',var(--font-body);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--navy);
+    color:var(--white);
+    font-family:var(--font-body);
+    font-size:15px;
+    line-height:1.55;
+    min-height:100vh;
+  }
+  button{font-family:inherit;cursor:pointer}
+  a{color:var(--teal)}
+  :focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:6px}
+
+  /* ---------- Sticky top bar ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:50;
+    background:rgba(15,27,45,.92);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    padding:10px clamp(12px,3vw,28px);
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  }
+  .brand{
+    font-family:var(--font-head);font-weight:700;font-size:18px;
+    letter-spacing:.3px;display:flex;align-items:center;gap:8px;white-space:nowrap;
+  }
+  .brand .spark{color:var(--teal)}
+  .searchwrap{flex:1 1 220px;min-width:150px;position:relative}
+  .searchwrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.5}
+  #search{
+    width:100%;padding:9px 12px 9px 34px;
+    background:var(--card);border:1px solid var(--line);border-radius:8px;
+    color:var(--white);font:inherit;font-size:14px;
+  }
+  #search::placeholder{color:var(--muted)}
+  #search:focus{border-color:var(--teal);outline:none;box-shadow:0 0 0 3px var(--teal-dim)}
+  .topbar select{
+    background:var(--card);color:var(--white);border:1px solid var(--line);
+    border-radius:8px;padding:9px 10px;font:inherit;font-size:13px;
+  }
+  .toggle-btn{
+    border:1px solid var(--line);background:var(--card);color:var(--muted);
+    border-radius:8px;padding:9px 12px;font-size:13px;font-weight:500;
+    display:flex;align-items:center;gap:6px;transition:all .15s;
+  }
+  .toggle-btn[aria-pressed="true"]{
+    background:var(--teal-dim);border-color:var(--teal);color:var(--teal);
+  }
+  .toggle-btn:hover{color:var(--white);border-color:var(--muted)}
+  .toggle-btn[aria-pressed="true"]:hover{color:var(--teal)}
+
+  /* ---------- Hero + XP bar ---------- */
+  .hero{padding:34px clamp(12px,3vw,28px) 8px;max-width:1180px;margin:0 auto;width:100%}
+  .hero h1{
+    font-family:var(--font-head);font-weight:700;
+    font-size:clamp(24px,4vw,36px);line-height:1.15;letter-spacing:-.5px;
+  }
+  .hero h1 em{font-style:normal;color:var(--teal)}
+  .hero p.sub{color:var(--muted);margin-top:6px;max-width:560px;font-size:14px}
+
+  .xp{
+    margin-top:22px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);padding:16px 18px;
+  }
+  .xp-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px}
+  .xp-head .label{
+    font-family:var(--font-head);font-size:13px;font-weight:600;
+    text-transform:uppercase;letter-spacing:1.5px;color:var(--teal);
+  }
+  .xp-head .stats{font-size:13px;color:var(--muted)}
+  .xp-head .stats b{color:var(--white);font-weight:600}
+  .xp-track{
+    margin-top:10px;height:14px;border-radius:99px;
+    background:rgba(0,0,0,.35);border:1px solid var(--line);
+    position:relative;overflow:hidden;
+  }
+  .xp-fill{
+    height:100%;width:0%;border-radius:99px;
+    background:linear-gradient(90deg,#008C72,var(--teal));
+    box-shadow:0 0 12px rgba(0,212,170,.7),0 0 26px rgba(0,212,170,.35);
+    transition:width .6s cubic-bezier(.22,1,.36,1);
+    position:relative;
+  }
+  .xp-fill::after{
+    content:"";position:absolute;inset:0;border-radius:99px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+    background-size:200% 100%;animation:shimmer 2.4s linear infinite;
+  }
+  @keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+  .xp-foot{margin-top:8px;font-size:12px;color:var(--muted)}
+  .xp-foot .lvl{color:var(--amber);font-weight:600}
+
+  /* ---------- Filter panel ---------- */
+  .filters{
+    max-width:1180px;margin:18px auto 0;width:100%;
+    padding:0 clamp(12px,3vw,28px);
+  }
+  .filterbox{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 16px;display:none;
+  }
+  .filterbox.open{display:block;animation:fadein .2s ease}
+  @keyframes fadein{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .fgroup{margin-bottom:12px}
+  .fgroup:last-child{margin-bottom:0}
+  .fgroup .ftitle{
+    font-size:11px;text-transform:uppercase;letter-spacing:1.2px;
+    color:var(--muted);font-weight:600;margin-bottom:7px;
+  }
+  .pillrow{display:flex;flex-wrap:wrap;gap:6px}
+  .pill{
+    border:1px solid var(--line);background:transparent;color:var(--muted);
+    border-radius:99px;padding:5px 12px;font-size:12.5px;font-weight:500;
+    transition:all .15s;
+  }
+  .pill:hover{color:var(--white);border-color:var(--muted)}
+  .pill[aria-pressed="true"]{
+    background:var(--teal-dim);border-color:var(--teal);color:var(--teal);
+  }
+  .clear-filters{
+    margin-top:10px;background:none;border:none;color:var(--muted);
+    font-size:12.5px;text-decoration:underline;padding:2px;
+  }
+  .clear-filters:hover{color:var(--teal)}
+
+  /* ---------- Results meta ---------- */
+  .meta{
+    max-width:1180px;margin:16px auto 0;width:100%;
+    padding:0 clamp(12px,3vw,28px);
+    display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+  }
+  .count{font-size:13px;color:var(--muted)}
+  .count b{color:var(--white)}
+
+  /* ---------- Grid + cards ---------- */
+  .grid{
+    max-width:1180px;margin:14px auto 60px;width:100%;
+    padding:0 clamp(12px,3vw,28px);
+    display:grid;gap:16px;
+    grid-template-columns:repeat(3,1fr);
+  }
+  @media(max-width:920px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){.grid{grid-template-columns:1fr}}
+
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 16px 16px 20px;position:relative;overflow:hidden;
+    display:flex;flex-direction:column;gap:10px;
+    transition:transform .18s ease,box-shadow .18s ease,opacity .25s ease,border-color .18s;
+    animation:cardin .3s ease both;
+  }
+  @keyframes cardin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 10px 28px rgba(0,0,0,.4);
+    background:var(--card-hover);
+  }
+  .card::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:var(--accent,#00D4AA);
+  }
+  .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+  .provider{
+    display:flex;align-items:center;gap:7px;
+    font-size:12.5px;color:var(--muted);font-weight:500;
+  }
+  .provider .logo{font-size:16px;line-height:1}
+  .savebtn{
+    background:none;border:none;color:var(--muted);padding:4px;
+    border-radius:6px;display:flex;transition:color .15s,transform .15s;flex-shrink:0;
+  }
+  .savebtn:hover{color:var(--teal);transform:scale(1.12)}
+  .savebtn[aria-pressed="true"]{color:var(--teal)}
+  .card h3{
+    font-family:var(--font-head);font-weight:600;font-size:17.5px;
+    line-height:1.3;letter-spacing:-.2px;
+  }
+  .card .desc{font-size:13px;color:var(--muted);flex-grow:1}
+  .badges{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .badge{
+    font-size:11px;font-weight:600;border-radius:99px;padding:3px 9px;
+    letter-spacing:.3px;
+  }
+  .badge.level-Beginner{background:rgba(0,212,170,.12);color:var(--teal)}
+  .badge.level-Intermediate{background:rgba(143,163,191,.15);color:#B9C8DC}
+  .badge.level-Advanced{background:rgba(255,107,107,.13);color:#FF8A8A}
+  .badge.time{background:rgba(143,163,191,.1);color:var(--muted);font-weight:500}
+  .tags{display:flex;flex-wrap:wrap;gap:5px}
+  .tag{
+    font-size:11px;color:var(--muted);background:rgba(0,0,0,.25);
+    border-radius:5px;padding:2px 7px;
+  }
+  .card-actions{
+    display:flex;gap:8px;align-items:center;margin-top:2px;
+    border-top:1px solid var(--line);padding-top:12px;
+  }
+  .cta{
+    flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
+    background:var(--teal);color:#06291f;text-decoration:none;
+    font-weight:600;font-size:13.5px;border-radius:8px;padding:9px 12px;
+    transition:filter .15s,transform .15s;
+  }
+  .cta:hover{filter:brightness(1.12);transform:translateY(-1px)}
+  .statusbtn{
+    border:1px solid var(--line);background:transparent;border-radius:8px;
+    padding:8px 11px;font-size:12px;font-weight:600;color:var(--muted);
+    white-space:nowrap;transition:all .15s;
+  }
+  .statusbtn[data-status="progress"]{
+    background:var(--amber-dim);border-color:var(--amber);color:var(--amber);
+  }
+  .statusbtn[data-status="done"]{
+    background:var(--teal-dim);border-color:var(--teal);color:var(--teal);
+  }
+  .statusbtn:hover{border-color:var(--muted);color:var(--white)}
+  .statusbtn[data-status="progress"]:hover{color:var(--amber)}
+  .statusbtn[data-status="done"]:hover{color:var(--teal)}
+  .card.is-done::after{
+    content:"✓ Completed";position:absolute;top:12px;right:-34px;
+    transform:rotate(35deg);background:var(--teal);color:#06291f;
+    font-size:10px;font-weight:700;padding:3px 36px;letter-spacing:.5px;
+  }
+
+  /* ---------- Empty state ---------- */
+  .empty{
+    grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted);
+  }
+  .empty svg{margin-bottom:14px;opacity:.7}
+  .empty h2{font-family:var(--font-head);color:var(--white);font-size:20px;margin-bottom:6px}
+  .empty p{font-size:14px;max-width:380px;margin:0 auto 16px}
+  .empty .pill{border-color:var(--teal);color:var(--teal);font-size:13px;padding:8px 18px}
+
+  footer{
+    text-align:center;color:var(--muted);font-size:12px;
+    padding:24px 16px 36px;border-top:1px solid var(--line);
+  }
+
+  @media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+    html{scroll-behavior:auto}
+  }
+  @media(max-width:480px){
+    .topbar{padding:8px 10px}
+    .brand span.word{display:none}
+    .card-actions{flex-wrap:wrap}
+    .cta{flex:1 1 100%}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><span class="spark">⬢</span><span class="word">CertQuest</span></div>
+  <div class="searchwrap">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8FA3BF" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="search" type="search" placeholder="Search certs, providers, or #tags…" aria-label="Search certifications">
+  </div>
+  <select id="sort" aria-label="Sort certifications">
+    <option value="az">Provider A–Z</option>
+    <option value="new">Newest</option>
+    <option value="short">Shortest first</option>
+    <option value="pop" selected>Most popular</option>
+  </select>
+  <button class="toggle-btn" id="savedToggle" aria-pressed="false" aria-label="Show saved certifications only">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1z"/></svg>
+    Saved
+  </button>
+  <button class="toggle-btn" id="filterToggle" aria-pressed="false" aria-expanded="false" aria-controls="filterbox">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 5h18M7 12h10M10 19h4"/></svg>
+    Filters
+  </button>
+</header>
+
+<section class="hero">
+  <h1>Free AI certifications.<br>Zero excuses. <em>Start collecting.</em></h1>
+  <p class="sub">Hand-picked courses and certificates from 12 major providers — every one of them free to learn. Save the ones you want, track your progress, and watch your path light up.</p>
+
+  <div class="xp" aria-live="polite">
+    <div class="xp-head">
+      <span class="label">⚡ Learning Path</span>
+      <span class="stats" id="xpStats"><b>0</b> saved · <b>0</b> in progress · <b>0</b> completed</span>
+    </div>
+    <div class="xp-track" role="progressbar" aria-label="Completed certifications out of saved" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="xpTrack">
+      <div class="xp-fill" id="xpFill"></div>
+    </div>
+    <div class="xp-foot" id="xpFoot">Save a cert below to start your path — every completion fills the bar.</div>
+  </div>
+</section>
+
+<section class="filters">
+  <div class="filterbox" id="filterbox">
+    <div class="fgroup">
+      <div class="ftitle">Provider</div>
+      <div class="pillrow" id="providerPills" role="group" aria-label="Filter by provider"></div>
+    </div>
+    <div class="fgroup">
+      <div class="ftitle">Level</div>
+      <div class="pillrow" id="levelPills" role="group" aria-label="Filter by skill level"></div>
+    </div>
+    <div class="fgroup">
+      <div class="ftitle">Time to complete</div>
+      <div class="pillrow" id="timePills" role="group" aria-label="Filter by time to complete"></div>
+    </div>
+    <div class="fgroup">
+      <div class="ftitle">Topic</div>
+      <div class="pillrow" id="topicPills" role="group" aria-label="Filter by topic"></div>
+    </div>
+    <button class="clear-filters" id="clearFilters">Clear all filters</button>
+  </div>
+</section>
+
+<div class="meta">
+  <span class="count" id="count"></span>
+</div>
+
+<main class="grid" id="grid" aria-live="polite"></main>
+
+<footer>
+  Built for learners. Availability and pricing can change — always confirm “free” on the provider’s page before enrolling. Progress is stored locally in your browser.
+</footer>
+
+<script>
+"use strict";
+
+/* ============ DATA ============ */
+const CERTS = [
+  // IBM
+  {id:"ibm-ai-fund", provider:"IBM", logo:"🟦", color:"#0F62FE", title:"Artificial Intelligence Fundamentals", desc:"IBM SkillsBuild's flagship free credential covering AI concepts, ethics, and real applications, with a shareable digital badge.", level:"Beginner", hours:10, tags:["AI Basics","Ethics","Badge"], url:"https://skillsbuild.org/adult-learners/explore-learning/artificial-intelligence", pop:88, added:"2023-04-10"},
+  {id:"ibm-genai", provider:"IBM", logo:"🟦", color:"#0F62FE", title:"Generative AI in Action", desc:"Hands-on intro to generative models, prompting, and responsible use of GenAI tools at work — free via IBM SkillsBuild.", level:"Beginner", hours:6, tags:["Generative AI","Prompt Engineering"], url:"https://skillsbuild.org", pop:74, added:"2024-02-20"},
+  // Anthropic
+  {id:"ant-api", provider:"Anthropic", logo:"🟠", color:"#D97757", title:"Claude with the Anthropic API", desc:"Anthropic Academy's deep developer course: build with Claude, master tool use, RAG, and agentic workflows.", level:"Intermediate", hours:14, tags:["LLMs","API","Agents","Claude"], url:"https://anthropic.skilljar.com", pop:81, added:"2025-05-20"},
+  {id:"ant-fluency", provider:"Anthropic", logo:"🟠", color:"#D97757", title:"AI Fluency: Frameworks & Foundations", desc:"A practical framework for working effectively, ethically, and safely with AI — no coding required.", level:"Beginner", hours:4, tags:["AI Basics","Prompt Engineering","Ethics"], url:"https://anthropic.skilljar.com", pop:77, added:"2025-06-01"},
+  {id:"ant-mcp", provider:"Anthropic", logo:"🟠", color:"#D97757", title:"Introduction to Model Context Protocol", desc:"Learn MCP, the open standard for connecting AI models to tools and data sources, with hands-on labs.", level:"Intermediate", hours:5, tags:["MCP","Agents","API"], url:"https://anthropic.skilljar.com", pop:69, added:"2025-07-15"},
+  {id:"ant-code", provider:"Anthropic", logo:"🟠", color:"#D97757", title:"Claude Code in Action", desc:"Use agentic coding to plan, build, and refactor real projects with Claude Code from the terminal.", level:"Intermediate", hours:6, tags:["Coding","Agents","Claude"], url:"https://anthropic.skilljar.com", pop:72, added:"2025-08-10"},
+  // OpenAI
+  {id:"oai-academy", provider:"OpenAI", logo:"🌀", color:"#10A37F", title:"OpenAI Academy: AI Foundations", desc:"Free learning hub with videos and live sessions on ChatGPT fundamentals, prompting, and practical AI workflows.", level:"Beginner", hours:5, tags:["AI Basics","Prompt Engineering","ChatGPT"], url:"https://academy.openai.com", pop:79, added:"2025-03-25"},
+  // Google
+  {id:"g-mlcc", provider:"Google", logo:"🔵", color:"#4285F4", title:"Machine Learning Crash Course", desc:"Google's classic fast-paced ML course: video lectures, interactive visualizations, and hands-on exercises with real datasets.", level:"Intermediate", hours:15, tags:["Machine Learning","Python","TensorFlow"], url:"https://developers.google.com/machine-learning/crash-course", pop:92, added:"2023-01-15"},
+  {id:"g-introgen", provider:"Google", logo:"🔵", color:"#4285F4", title:"Introduction to Generative AI", desc:"A no-cost Google Cloud Skills Boost micro-course explaining what generative AI is and how it differs from traditional ML. Earns a badge.", level:"Beginner", hours:1, tags:["Generative AI","AI Basics","Badge"], url:"https://www.cloudskillsboost.google/course_templates/536", pop:85, added:"2023-06-01"},
+  {id:"g-introllm", provider:"Google", logo:"🔵", color:"#4285F4", title:"Introduction to Large Language Models", desc:"Short Skills Boost course on what LLMs are, their use cases, and how prompt tuning improves performance.", level:"Beginner", hours:1, tags:["LLMs","Prompt Engineering","Badge"], url:"https://www.cloudskillsboost.google/course_templates/539", pop:80, added:"2023-06-01"},
+  {id:"g-essentials", provider:"Google", logo:"🔵", color:"#4285F4", title:"Google AI Essentials", desc:"Practical course from Google on using AI tools for everyday productivity, prompting, and responsible AI use.", level:"Beginner", hours:9, tags:["AI Basics","Prompt Engineering","Productivity"], url:"https://grow.google/ai-essentials/", pop:83, added:"2024-04-15"},
+  // Microsoft
+  {id:"ms-ai900", provider:"Microsoft", logo:"🟩", color:"#7FBA00", title:"Azure AI Fundamentals (AI-900) Training", desc:"Microsoft Learn's free self-paced path covering AI workloads, ML basics, computer vision, NLP, and generative AI on Azure.", level:"Beginner", hours:10, tags:["Azure","Machine Learning","Computer Vision","NLP"], url:"https://learn.microsoft.com/training/paths/get-started-with-artificial-intelligence-on-azure/", pop:86, added:"2023-03-01"},
+  {id:"ms-genai", provider:"Microsoft", logo:"🟩", color:"#7FBA00", title:"Fundamentals of Generative AI", desc:"Free Microsoft Learn module on how language models work and how to build copilot-style experiences.", level:"Beginner", hours:1, tags:["Generative AI","LLMs"], url:"https://learn.microsoft.com/training/modules/fundamentals-generative-ai/", pop:71, added:"2023-11-10"},
+  {id:"ms-copilot", provider:"Microsoft", logo:"🟩", color:"#7FBA00", title:"Get Started with Microsoft 365 Copilot", desc:"Learning path on using and extending Copilot across Word, Excel, Teams, and more — free with a Microsoft account.", level:"Beginner", hours:4, tags:["Copilot","Productivity"], url:"https://learn.microsoft.com/training/paths/get-started-with-microsoft-365-copilot/", pop:64, added:"2024-01-20"},
+  // DeepLearning.AI
+  {id:"dl-prompt", provider:"DeepLearning.AI", logo:"🔴", color:"#EA2D2E", title:"ChatGPT Prompt Engineering for Developers", desc:"Andrew Ng and OpenAI's famous short course: write effective prompts and build LLM features with the API.", level:"Beginner", hours:1.5, tags:["Prompt Engineering","LLMs","API"], url:"https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers/", pop:95, added:"2023-04-27"},
+  {id:"dl-langchain", provider:"DeepLearning.AI", logo:"🔴", color:"#EA2D2E", title:"LangChain for LLM Application Development", desc:"Build chains, memory, and agents to create real LLM-powered apps in this free hands-on short course.", level:"Intermediate", hours:1.5, tags:["LangChain","LLMs","Agents"], url:"https://www.deeplearning.ai/short-courses/langchain-for-llm-application-development/", pop:84, added:"2023-06-01"},
+  {id:"dl-ai4e", provider:"DeepLearning.AI", logo:"🔴", color:"#EA2D2E", title:"AI for Everyone", desc:"Andrew Ng's non-technical tour of what AI can and can't do, and how to navigate an AI-powered career. Free to audit.", level:"Beginner", hours:6, tags:["AI Basics","Career","Ethics"], url:"https://www.deeplearning.ai/courses/ai-for-everyone/", pop:90, added:"2023-01-01"},
+  {id:"dl-systems", provider:"DeepLearning.AI", logo:"🔴", color:"#EA2D2E", title:"Building Systems with the ChatGPT API", desc:"Chain multiple LLM calls, classify inputs, and evaluate outputs to ship robust AI systems.", level:"Intermediate", hours:1.5, tags:["API","LLMs","Evaluation"], url:"https://www.deeplearning.ai/short-courses/building-systems-with-chatgpt/", pop:76, added:"2023-06-15"},
+  // Hugging Face
+  {id:"hf-nlp", provider:"Hugging Face", logo:"🤗", color:"#FFD21E", title:"NLP Course (Transformers)", desc:"The definitive free course on transformers, tokenizers, and fine-tuning with the Hugging Face ecosystem.", level:"Intermediate", hours:20, tags:["NLP","Transformers","Python","Fine-tuning"], url:"https://huggingface.co/learn/nlp-course", pop:89, added:"2023-02-01"},
+  {id:"hf-agents", provider:"Hugging Face", logo:"🤗", color:"#FFD21E", title:"AI Agents Course", desc:"Build, evaluate, and deploy AI agents with smolagents, LangGraph, and LlamaIndex — finish for a free certificate.", level:"Intermediate", hours:15, tags:["Agents","LLMs","Certificate"], url:"https://huggingface.co/learn/agents-course", pop:87, added:"2025-02-10"},
+  {id:"hf-diff", provider:"Hugging Face", logo:"🤗", color:"#FFD21E", title:"Diffusion Models Course", desc:"Learn the theory and code behind image generation: train and fine-tune diffusion models with the diffusers library.", level:"Advanced", hours:12, tags:["Diffusion","Computer Vision","Python"], url:"https://huggingface.co/learn/diffusion-course", pop:66, added:"2023-09-01"},
+  {id:"hf-rl", provider:"Hugging Face", logo:"🤗", color:"#FFD21E", title:"Deep Reinforcement Learning Course", desc:"Train agents in classic and modern environments, from Q-learning to PPO, with a certificate at the end.", level:"Advanced", hours:24, tags:["Reinforcement Learning","Python","Certificate"], url:"https://huggingface.co/learn/deep-rl-course", pop:70, added:"2023-05-01"},
+  // Kaggle
+  {id:"kg-python", provider:"Kaggle", logo:"📊", color:"#20BEFF", title:"Python", desc:"Kaggle Learn's fast, practical Python refresher built for data science — earn a free completion certificate.", level:"Beginner", hours:5, tags:["Python","Certificate"], url:"https://www.kaggle.com/learn/python", pop:82, added:"2023-01-01"},
+  {id:"kg-introml", provider:"Kaggle", logo:"📊", color:"#20BEFF", title:"Intro to Machine Learning", desc:"Build your first models in scikit-learn, learn validation, and avoid over/underfitting. Certificate included.", level:"Beginner", hours:3, tags:["Machine Learning","Python","Certificate"], url:"https://www.kaggle.com/learn/intro-to-machine-learning", pop:88, added:"2023-01-01"},
+  {id:"kg-dl", provider:"Kaggle", logo:"📊", color:"#20BEFF", title:"Intro to Deep Learning", desc:"Use TensorFlow and Keras to build neural networks for tabular data, with dropout, batch norm, and more.", level:"Intermediate", hours:4, tags:["Deep Learning","TensorFlow","Certificate"], url:"https://www.kaggle.com/learn/intro-to-deep-learning", pop:75, added:"2023-01-01"},
+  {id:"kg-ethics", provider:"Kaggle", logo:"📊", color:"#20BEFF", title:"Intro to AI Ethics", desc:"Identify bias, evaluate fairness, and design more responsible AI systems through hands-on exercises.", level:"Beginner", hours:4, tags:["Ethics","AI Basics","Certificate"], url:"https://www.kaggle.com/learn/intro-to-ai-ethics", pop:61, added:"2023-01-01"},
+  // AWS
+  {id:"aws-aip", provider:"AWS", logo:"🟧", color:"#FF9900", title:"AI Practitioner Exam Prep (Free Digital)", desc:"AWS Skill Builder's free standard exam-prep plan for the AWS Certified AI Practitioner: AI/ML basics, GenAI, and responsible AI.", level:"Beginner", hours:12, tags:["AWS","Generative AI","Cloud"], url:"https://skillbuilder.aws", pop:78, added:"2024-08-01"},
+  {id:"aws-prompt", provider:"AWS", logo:"🟧", color:"#FF9900", title:"Foundations of Prompt Engineering", desc:"Free AWS digital course on crafting, refining, and defending prompts for foundation models.", level:"Beginner", hours:4, tags:["Prompt Engineering","LLMs","Cloud"], url:"https://skillbuilder.aws", pop:68, added:"2023-07-15"},
+  {id:"aws-genai", provider:"AWS", logo:"🟧", color:"#FF9900", title:"Generative AI: Art of the Possible", desc:"A quick, free primer on generative AI use cases, risks, and business value on AWS.", level:"Beginner", hours:1, tags:["Generative AI","Cloud"], url:"https://skillbuilder.aws", pop:59, added:"2023-07-15"},
+  // LinkedIn Learning
+  {id:"li-genai", provider:"LinkedIn Learning", logo:"💼", color:"#0A66C2", title:"Career Essentials in Generative AI", desc:"Free learning path from Microsoft and LinkedIn with a shareable Professional Certificate on GenAI skills and ethics.", level:"Beginner", hours:5, tags:["Generative AI","Career","Certificate","Ethics"], url:"https://www.linkedin.com/learning/paths/career-essentials-in-generative-ai-by-microsoft-and-linkedin", pop:84, added:"2023-06-20"},
+  // NVIDIA
+  {id:"nv-genai", provider:"NVIDIA", logo:"🟢", color:"#76B900", title:"Generative AI Explained", desc:"Free NVIDIA Deep Learning Institute course unpacking how GenAI works, its applications, and its challenges.", level:"Beginner", hours:2, tags:["Generative AI","AI Basics","Certificate"], url:"https://www.nvidia.com/en-us/training/", pop:67, added:"2024-01-10"},
+  {id:"nv-rag", provider:"NVIDIA", logo:"🟢", color:"#76B900", title:"Building RAG Agents with LLMs", desc:"Free DLI hands-on course: design retrieval-augmented generation pipelines and scalable LLM agents.", level:"Advanced", hours:8, tags:["RAG","Agents","LLMs","Certificate"], url:"https://www.nvidia.com/en-us/training/", pop:65, added:"2024-03-05"},
+  // Meta
+  {id:"meta-llama", provider:"Meta", logo:"♾️", color:"#0668E1", title:"Llama Developer Learning Path", desc:"Meta's free guides, recipes, and tutorials for building with open-weight Llama models, from prompting to fine-tuning.", level:"Intermediate", hours:8, tags:["Llama","Open Source","LLMs","Fine-tuning"], url:"https://www.llama.com", pop:62, added:"2024-09-25"}
+];
+
+/* ============ SAFE STORAGE (falls back to memory if blocked) ============ */
+const store = (() => {
+  let mem = {};
+  let ok = false;
+  try {
+    const k = "__cq_test__";
+    localStorage.setItem(k, "1"); localStorage.removeItem(k);
+    ok = true;
+  } catch (e) { ok = false; }
+  return {
+    get(key, fallback) {
+      try {
+        const raw = ok ? localStorage.getItem(key) : mem[key];
+        return raw ? JSON.parse(raw) : fallback;
+      } catch (e) { return fallback; }
+    },
+    set(key, val) {
+      const raw = JSON.stringify(val);
+      try { if (ok) localStorage.setItem(key, raw); else mem[key] = raw; }
+      catch (e) { mem[key] = raw; }
+    }
+  };
+})();
+
+/* ============ STATE ============ */
+let saved = store.get("cq_saved", {});      // {id:true}
+let status = store.get("cq_status", {});    // {id:"none"|"progress"|"done"}
+const state = {
+  q: "",
+  providers: new Set(),
+  levels: new Set(),
+  times: new Set(),     // "lt2","2to10","gt10"
+  topics: new Set(),
+  savedOnly: false,
+  sort: "pop"
+};
+
+const TIME_BUCKETS = [
+  {key:"lt2",  label:"< 2 hrs",  test:h => h < 2},
+  {key:"2to10",label:"2–10 hrs", test:h => h >= 2 && h <= 10},
+  {key:"gt10", label:"10+ hrs",  test:h => h > 10}
+];
+const LEVELS = ["Beginner","Intermediate","Advanced"];
+const STATUS_CYCLE = {none:"progress", progress:"done", done:"none"};
+const STATUS_LABEL = {none:"Not started", progress:"In progress", done:"Completed ✓"};
+
+/* ============ ELEMENTS ============ */
+const $ = id => document.getElementById(id);
+const grid = $("grid"), countEl = $("count");
+
+/* ============ BUILD FILTER PILLS ============ */
+function makePill(label, set, value, onChange) {
+  const b = document.createElement("button");
+  b.className = "pill";
+  b.type = "button";
+  b.textContent = label;
+  b.setAttribute("aria-pressed", "false");
+  b.addEventListener("click", () => {
+    if (set.has(value)) set.delete(value); else set.add(value);
+    b.setAttribute("aria-pressed", set.has(value) ? "true" : "false");
+    onChange();
+  });
+  return b;
+}
+
+function buildFilters() {
+  const providers = [...new Set(CERTS.map(c => c.provider))].sort();
+  providers.forEach(p => $("providerPills").appendChild(makePill(p, state.providers, p, render)));
+  LEVELS.forEach(l => $("levelPills").appendChild(makePill(l, state.levels, l, render)));
+  TIME_BUCKETS.forEach(t => $("timePills").appendChild(makePill(t.label, state.times, t.key, render)));
+  const topicCounts = {};
+  CERTS.forEach(c => c.tags.forEach(t => topicCounts[t] = (topicCounts[t]||0)+1));
+  const topics = Object.keys(topicCounts).sort((a,b) => topicCounts[b]-topicCounts[a] || a.localeCompare(b));
+  topics.forEach(t => $("topicPills").appendChild(makePill("#" + t.replace(/\s+/g,""), state.topics, t, render)));
+}
+
+/* ============ FILTER + SORT ============ */
+function visibleCerts() {
+  const q = state.q.trim().toLowerCase().replace(/^#/, "");
+  let list = CERTS.filter(c => {
+    if (state.savedOnly && !saved[c.id]) return false;
+    if (state.providers.size && !state.providers.has(c.provider)) return false;
+    if (state.levels.size && !state.levels.has(c.level)) return false;
+    if (state.times.size) {
+      const hit = TIME_BUCKETS.some(t => state.times.has(t.key) && t.test(c.hours));
+      if (!hit) return false;
+    }
+    if (state.topics.size && ![...state.topics].every(t => c.tags.includes(t))) return false;
+    if (q) {
+      const hay = (c.title + " " + c.provider + " " + c.tags.join(" ")).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  const sorters = {
+    az:   (a,b) => a.provider.localeCompare(b.provider) || a.title.localeCompare(b.title),
+    new:  (a,b) => b.added.localeCompare(a.added),
+    short:(a,b) => a.hours - b.hours,
+    pop:  (a,b) => b.pop - a.pop
+  };
+  return list.sort(sorters[state.sort] || sorters.pop);
+}
+
+/* ============ RENDER ============ */
+function fmtHours(h) { return h < 1.01 ? "~1 hr" : (h % 1 ? h.toFixed(1) : h) + " hrs"; }
+
+function cardHTML(c) {
+  const st = status[c.id] || "none";
+  const isSaved = !!saved[c.id];
+  return `
+  <article class="card${st === "done" ? " is-done" : ""}" style="--accent:${c.color}" data-id="${c.id}">
+    <div class="card-top">
+      <span class="provider"><span class="logo" aria-hidden="true">${c.logo}</span>${c.provider}</span>
+      <button class="savebtn" data-act="save" aria-pressed="${isSaved}"
+        aria-label="${isSaved ? "Remove" : "Save"} ${c.title} ${isSaved ? "from" : "to"} your saved list" title="${isSaved ? "Saved" : "Save for later"}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="${isSaved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/>
+        </svg>
+      </button>
+    </div>
+    <h3>${c.title}</h3>
+    <p class="desc">${c.desc}</p>
+    <div class="badges">
+      <span class="badge level-${c.level}">${c.level}</span>
+      <span class="badge time">⏱ ${fmtHours(c.hours)}</span>
+    </div>
+    <div class="tags">${c.tags.map(t => `<span class="tag">#${t.replace(/\s+/g,"")}</span>`).join("")}</div>
+    <div class="card-actions">
+      <a class="cta" href="${c.url}" target="_blank" rel="noopener noreferrer"
+         aria-label="Start learning ${c.title} on ${c.provider} (opens in new tab)">Start learning ↗</a>
+      <button class="statusbtn" data-act="status" data-status="${st}"
+        aria-label="Progress for ${c.title}: ${STATUS_LABEL[st]}. Click to change.">${STATUS_LABEL[st]}</button>
+    </div>
+  </article>`;
+}
+
+function emptyHTML() {
+  return `
+  <div class="empty">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#8FA3BF" stroke-width="1.4" aria-hidden="true">
+      <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/><path d="M8 11h6" stroke-linecap="round"/>
+    </svg>
+    <h2>No certifications match</h2>
+    <p>${state.savedOnly && !Object.keys(saved).some(k=>saved[k])
+        ? "You haven't saved anything yet. Turn off “Saved” and bookmark a few certs to build your path."
+        : "Try a different search term, or loosen a filter or two — there's a lot of free learning hiding here."}</p>
+    <button class="pill" id="emptyClear">Clear all filters</button>
+  </div>`;
+}
+
+function render() {
+  const list = visibleCerts();
+  grid.innerHTML = list.length ? list.map(cardHTML).join("") : emptyHTML();
+  countEl.innerHTML = `Showing <b>${list.length}</b> of <b>${CERTS.length}</b> certifications`;
+  const ec = $("emptyClear");
+  if (ec) ec.addEventListener("click", clearAll);
+  renderXP();
+}
+
+function renderXP() {
+  const ids = CERTS.map(c => c.id);
+  const nSaved = ids.filter(id => saved[id]).length;
+  const nProg = ids.filter(id => status[id] === "progress").length;
+  const nDone = ids.filter(id => status[id] === "done").length;
+  $("xpStats").innerHTML = `<b>${nSaved}</b> saved · <b>${nProg}</b> in progress · <b>${nDone}</b> completed`;
+  const goal = Math.max(nSaved, nDone, 1);
+  const pct = Math.round((nDone / goal) * 100);
+  $("xpFill").style.width = pct + "%";
+  $("xpTrack").setAttribute("aria-valuenow", pct);
+  const lvl = Math.floor(nDone / 3) + 1;
+  $("xpFoot").innerHTML = nSaved || nDone
+    ? `<span class="lvl">Level ${lvl}</span> · ${nDone} of ${goal} on your path completed (${pct}%) — keep going!`
+    : "Save a cert below to start your path — every completion fills the bar.";
+}
+
+/* ============ EVENTS ============ */
+grid.addEventListener("click", e => {
+  const btn = e.target.closest("button[data-act]");
+  if (!btn) return;
+  const card = btn.closest(".card");
+  const id = card.dataset.id;
+  if (btn.dataset.act === "save") {
+    saved[id] = !saved[id];
+    if (!saved[id]) delete saved[id];
+    store.set("cq_saved", saved);
+  } else if (btn.dataset.act === "status") {
+    const next = STATUS_CYCLE[status[id] || "none"];
+    if (next === "none") delete status[id]; else status[id] = next;
+    store.set("cq_status", status);
+  }
+  render();
+});
+
+$("search").addEventListener("input", e => { state.q = e.target.value; render(); });
+$("sort").addEventListener("change", e => { state.sort = e.target.value; render(); });
+
+$("savedToggle").addEventListener("click", e => {
+  state.savedOnly = !state.savedOnly;
+  e.currentTarget.setAttribute("aria-pressed", state.savedOnly);
+  render();
+});
+
+$("filterToggle").addEventListener("click", e => {
+  const box = $("filterbox");
+  const open = !box.classList.contains("open");
+  box.classList.toggle("open", open);
+  e.currentTarget.setAttribute("aria-pressed", open);
+  e.currentTarget.setAttribute("aria-expanded", open);
+});
+
+function clearAll() {
+  state.q = ""; $("search").value = "";
+  state.providers.clear(); state.levels.clear(); state.times.clear(); state.topics.clear();
+  state.savedOnly = false;
+  $("savedToggle").setAttribute("aria-pressed", "false");
+  document.querySelectorAll(".pillrow .pill").forEach(p => p.setAttribute("aria-pressed", "false"));
+  render();
+}
+$("clearFilters").addEventListener("click", clearAll);
+
+/* ============ INIT ============ */
+buildFilters();
+render();
+</script>
+</body>
+</html>
