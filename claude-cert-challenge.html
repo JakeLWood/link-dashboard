@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CertQuest — Claude Certification Challenge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F1B2D;
+    --card:#1A2940;
+    --card-hover:#20324E;
+    --teal:#00D4AA;
+    --teal-dim:rgba(0,212,170,.14);
+    --amber:#FFB347;
+    --amber-dim:rgba(255,179,71,.15);
+    --white:#F4F8FC;
+    --muted:#8FA3BF;
+    --line:rgba(143,163,191,.18);
+    --radius:12px;
+    --font-body:'Inter',system-ui,sans-serif;
+    --font-head:'Space Grotesk',var(--font-body);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--navy);
+    color:var(--white);
+    font-family:var(--font-body);
+    font-size:15px;
+    line-height:1.55;
+    min-height:100vh;
+  }
+  button{font-family:inherit;cursor:pointer}
+  a{color:var(--teal)}
+  :focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:6px}
+
+  .topbar{
+    position:sticky;top:0;z-index:50;
+    background:rgba(15,27,45,.92);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    padding:12px clamp(12px,3vw,28px);
+    display:flex;align-items:center;gap:8px;
+  }
+  .brand{
+    font-family:var(--font-head);font-weight:700;font-size:18px;
+    letter-spacing:.3px;display:flex;align-items:center;gap:8px;
+  }
+  .brand .spark{color:var(--teal)}
+
+  .hero{padding:34px clamp(12px,3vw,28px) 8px;max-width:760px;margin:0 auto;width:100%}
+  .hero h1{
+    font-family:var(--font-head);font-weight:700;
+    font-size:clamp(22px,4vw,32px);line-height:1.15;letter-spacing:-.5px;
+  }
+  .hero h1 em{font-style:normal;color:var(--teal)}
+  .hero p.sub{color:var(--muted);margin-top:8px;font-size:14px}
+
+  .tabs{
+    max-width:760px;margin:22px auto 0;width:100%;
+    padding:0 clamp(12px,3vw,28px);
+    display:flex;gap:8px;
+  }
+  .tabbtn{
+    flex:1;border:1px solid var(--line);background:var(--card);color:var(--muted);
+    border-radius:var(--radius);padding:12px 14px;font-size:14px;font-weight:600;
+    font-family:var(--font-head);letter-spacing:.2px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    transition:all .15s;
+  }
+  .tabbtn:hover{color:var(--white);border-color:var(--muted)}
+  .tabbtn[aria-pressed="true"]{
+    background:var(--teal-dim);border-color:var(--teal);color:var(--teal);
+  }
+
+  .panels{max-width:760px;margin:16px auto 60px;width:100%;padding:0 clamp(12px,3vw,28px)}
+  .panel{display:none;animation:fadein .2s ease}
+  .panel.active{display:block}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px 20px 20px 24px;position:relative;overflow:hidden;
+    display:flex;flex-direction:column;gap:12px;
+  }
+  .card::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:var(--accent,#00D4AA);
+  }
+  .provider{
+    display:flex;align-items:center;gap:7px;
+    font-size:12.5px;color:var(--muted);font-weight:500;
+  }
+  .provider .logo{font-size:16px;line-height:1}
+  .card h2{
+    font-family:var(--font-head);font-weight:600;font-size:19px;
+    line-height:1.3;letter-spacing:-.2px;
+  }
+  .card .desc{font-size:13.5px;color:var(--muted)}
+  .badges{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .badge{
+    font-size:11px;font-weight:600;border-radius:99px;padding:3px 9px;letter-spacing:.3px;
+  }
+  .badge.level-Beginner{background:rgba(0,212,170,.12);color:var(--teal)}
+  .badge.time{background:rgba(143,163,191,.1);color:var(--muted);font-weight:500}
+  .card-actions{
+    display:flex;gap:8px;align-items:center;margin-top:4px;
+    border-top:1px solid var(--line);padding-top:14px;
+  }
+  .cta{
+    flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
+    background:var(--teal);color:#06291f;text-decoration:none;
+    font-weight:600;font-size:14px;border-radius:8px;padding:11px 14px;
+    transition:filter .15s,transform .15s;
+  }
+  .cta:hover{filter:brightness(1.12);transform:translateY(-1px)}
+  .cta.pending{background:var(--amber);color:#3a2600}
+
+  footer{
+    text-align:center;color:var(--muted);font-size:12px;
+    padding:24px 16px 36px;border-top:1px solid var(--line);
+  }
+
+  @media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><span class="spark">⬢</span><span>CertQuest</span></div>
+</header>
+
+<section class="hero">
+  <h1>One easy cert.<br><em>Then prove it.</em></h1>
+  <p class="sub">Complete the free Claude certification below, then submit your proof on the assignment page. No coding required.</p>
+</section>
+
+<nav class="tabs" role="tablist" aria-label="Challenge steps">
+  <button class="tabbtn" id="tab-cert" role="tab" aria-pressed="true" aria-selected="true" aria-controls="panel-cert">
+    <span aria-hidden="true">🟠</span> Get certified
+  </button>
+  <button class="tabbtn" id="tab-submit" role="tab" aria-pressed="false" aria-selected="false" aria-controls="panel-submit">
+    <span aria-hidden="true">📤</span> Submit proof
+  </button>
+</nav>
+
+<main class="panels">
+  <section class="panel active" id="panel-cert" role="tabpanel" aria-labelledby="tab-cert">
+    <article class="card" style="--accent:#D97757">
+      <span class="provider"><span class="logo" aria-hidden="true">🟠</span>Anthropic</span>
+      <h2>AI Fluency: Frameworks &amp; Foundations</h2>
+      <p class="desc">A practical framework for working effectively, ethically, and safely with AI. Free, self-paced, and built for total beginners — no coding required.</p>
+      <div class="badges">
+        <span class="badge level-Beginner">Beginner</span>
+        <span class="badge time">⏱ ~4 hrs</span>
+      </div>
+      <div class="card-actions">
+        <a class="cta" href="https://anthropic.skilljar.com" target="_blank" rel="noopener noreferrer">Start certification ↗</a>
+      </div>
+    </article>
+  </section>
+
+  <section class="panel" id="panel-submit" role="tabpanel" aria-labelledby="tab-submit">
+    <article class="card" style="--accent:#00D4AA">
+      <span class="provider"><span class="logo" aria-hidden="true">📤</span>Submission</span>
+      <h2>Submit your certificate</h2>
+      <p class="desc">Once you've finished the certification and downloaded or saved your proof of completion, submit it on the assignment page.</p>
+      <div class="card-actions">
+        <!-- TODO: paste the Canvas assignment URL into href below once it's ready -->
+        <a class="cta pending" id="submitLink" href="https://smu.instructure.com/courses/156831/assignments/1327260" target="_blank" rel="noopener noreferrer">Go to assignment page ↗</a>
+      </div>
+    </article>
+  </section>
+</main>
+
+<footer>
+  Availability and pricing can change — always confirm "free" on the provider's page before enrolling.
+</footer>
+
+<script>
+"use strict";
+const tabCert = document.getElementById("tab-cert");
+const tabSubmit = document.getElementById("tab-submit");
+const panelCert = document.getElementById("panel-cert");
+const panelSubmit = document.getElementById("panel-submit");
+
+function showTab(which) {
+  const isCert = which === "cert";
+  panelCert.classList.toggle("active", isCert);
+  panelSubmit.classList.toggle("active", !isCert);
+  tabCert.setAttribute("aria-pressed", isCert);
+  tabCert.setAttribute("aria-selected", isCert);
+  tabSubmit.setAttribute("aria-pressed", !isCert);
+  tabSubmit.setAttribute("aria-selected", !isCert);
+}
+tabCert.addEventListener("click", () => showTab("cert"));
+tabSubmit.addEventListener("click", () => showTab("submit"));
+</script>
+</body>
+</html>
