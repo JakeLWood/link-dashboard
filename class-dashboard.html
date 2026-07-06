@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intro to Data Analytics — Class Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #10243e;
+    --navy-light: #1c3a5e;
+    --teal: #0d9488;
+    --teal-light: #14b8a6;
+    --bg: #f6f8fa;
+    --card-bg: #ffffff;
+    --border: #e2e8f0;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text-main);
+  }
+
+  .app {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 240px;
+    background: var(--navy);
+    color: #fff;
+    padding: 28px 18px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar .brand {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: 0.2px;
+  }
+
+  .sidebar .brand-sub {
+    font-size: 12px;
+    color: #9fb3c8;
+    margin-bottom: 32px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    border-radius: 8px;
+    color: #cbd5e1;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .nav-item:hover {
+    background: var(--navy-light);
+    color: #fff;
+  }
+
+  .nav-item.active {
+    background: var(--teal);
+    color: #fff;
+  }
+
+  .nav-icon {
+    font-size: 16px;
+    width: 18px;
+    text-align: center;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    font-size: 11px;
+    color: #7c93ab;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+  /* Main content */
+  .main {
+    flex: 1;
+    padding: 40px 48px;
+    max-width: 1000px;
+  }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .page-title {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0 0 6px 0;
+    color: var(--navy);
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0 0 28px 0;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 2px rgba(16,36,62,0.04);
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--navy);
+    margin: 0 0 6px 0;
+  }
+
+  .card-text {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* Home page specifics */
+  .home-hero {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+    color: #fff;
+    border-radius: 14px;
+    padding: 32px 32px;
+    margin-bottom: 24px;
+  }
+
+  .home-hero h2 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+  }
+
+  .home-hero p {
+    margin: 0;
+    color: #c9d8e6;
+    font-size: 14px;
+    max-width: 560px;
+    line-height: 1.6;
+  }
+
+  .instructor-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: #a9c2d8;
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(20,184,166,0.18);
+    color: var(--teal-light);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 4px;
+  }
+
+  .announcement-card {
+    border-left: 4px solid var(--teal);
+  }
+
+  /* Syllabus units */
+  .unit-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .unit-week {
+    flex-shrink: 0;
+    background: #ecfdf5;
+    color: var(--teal);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+
+  /* Assignments */
+  .assignment-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .assignment-info { flex: 1; }
+
+  .due-date {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--navy);
+    background: #eef2f7;
+    padding: 3px 9px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+  }
+
+  .submit-btn {
+    flex-shrink: 0;
+    background: var(--teal);
+    color: #fff;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 18px;
+    border-radius: 8px;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+  }
+
+  .submit-btn:hover {
+    background: #0f766e;
+  }
+
+  /* Materials */
+  .materials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  .material-card {
+    margin-bottom: 0;
+  }
+
+  .material-type {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+
+  .material-link {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    text-decoration: none;
+  }
+
+  .material-link:hover {
+    color: var(--teal);
+    text-decoration: underline;
+  }
+
+  @media (max-width: 720px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; flex-direction: row; align-items: center; padding: 14px 16px; overflow-x: auto; }
+    .sidebar .brand, .sidebar .brand-sub, .sidebar-footer { display: none; }
+    .nav-item { white-space: nowrap; margin-bottom: 0; }
+    .main { padding: 24px 20px; }
+    .assignment-card { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="brand">📊 DataClass</div>
+    <div class="brand-sub">Sample Class Dashboard</div>
+
+    <button class="nav-item active" data-target="home"><span class="nav-icon">🏠</span> Home</button>
+    <button class="nav-item" data-target="syllabus"><span class="nav-icon">📘</span> Syllabus</button>
+    <button class="nav-item" data-target="assignments"><span class="nav-icon">📝</span> Assignments</button>
+    <button class="nav-item" data-target="materials"><span class="nav-icon">📚</span> Materials</button>
+
+    <div class="sidebar-footer">Intro to Data Analytics<br>Sample dashboard — placeholder data</div>
+  </nav>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <!-- HOME -->
+    <section id="home" class="section active">
+      <div class="home-hero">
+        <span class="badge">Fall Term</span>
+        <h2>Intro to Data Analytics</h2>
+        <p>A foundational course covering spreadsheet analysis in Excel, relational databases with MySQL, and core data cleaning practices — building the skills needed to explore, query, and communicate insights from real datasets.</p>
+        <div class="instructor-line">👩‍🏫 Instructor: Dr. Maria Chen &nbsp;•&nbsp; office hours Tues/Thurs 2–3:30pm</div>
+      </div>
+
+      <div class="card announcement-card">
+        <div class="card-title">📣 Welcome to the course!</div>
+        <p class="card-text">This dashboard is your home base for the semester. Check the Syllabus tab for the unit schedule, Assignments for due dates and submission links, and Materials for readings and reference resources. New announcements will appear here throughout the term.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Quick overview</div>
+        <p class="card-text">6 units · 6 assignments · weekly readings and hands-on exercises in Excel and MySQL, culminating in a final capstone data analysis project.</p>
+      </div>
+    </section>
+
+    <!-- SYLLABUS -->
+    <section id="syllabus" class="section">
+      <h1 class="page-title">Syllabus</h1>
+      <p class="page-subtitle">Course units and weekly schedule</p>
+
+      <a class="material-link" style="display:inline-block; margin-bottom: 20px; background: #ecfdf5; padding: 8px 14px; border-radius: 8px;" href="https://smu.instructure.com/courses/156831/assignments/syllabus" target="_blank" rel="noopener">📄 View full syllabus in Canvas (Simple Syllabus) →</a>
+
+      <div class="card">
+        <div class="unit-row">
+          <span class="unit-week">Week 1</span>
+          <div>
+            <div class="card-title">Unit 1: Data Fundamentals</div>
+            <p class="card-text">Introduction to data types, structured vs. unstructured data, and the analytics workflow — from raw data to actionable insight.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="unit-row">
+          <span class="unit-week">Week 2–3</span>
+          <div>
+            <div class="card-title">Unit 2: Excel Essentials</div>
+            <p class="card-text">Core formulas (VLOOKUP, IF, SUMIFS), building pivot tables, and creating charts to summarize and visualize datasets.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="unit-row">
+          <span class="unit-week">Week 4</span>
+          <div>
+            <div class="card-title">Unit 3: Intro to SQL & MySQL</div>
+            <p class="card-text">Setting up MySQL, writing basic SELECT statements, filtering with WHERE, and sorting results.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="unit-row">
+          <span class="unit-week">Week 5–6</span>
+          <div>
+            <div class="card-title">Unit 4: Joins & Aggregation</div>
+            <p class="card-text">Combining tables with JOIN, grouping data with GROUP BY, and summarizing with aggregate functions (COUNT, SUM, AVG).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="unit-row">
+          <span class="unit-week">Week 7</span>
+          <div>
+            <div class="card-title">Unit 5: Data Cleaning</div>
+            <p class="card-text">Identifying and handling missing values, duplicates, and inconsistent formatting to prepare data for analysis.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="unit-row">
+          <span class="unit-week">Week 8</span>
+          <div>
+            <div class="card-title">Unit 6: Capstone Project</div>
+            <p class="card-text">Apply Excel and MySQL skills to analyze a real-world dataset and present findings in a final report.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ASSIGNMENTS -->
+    <section id="assignments" class="section">
+      <h1 class="page-title">Assignments</h1>
+      <p class="page-subtitle">Submit your work using the links below</p>
+
+      <div class="card assignment-card">
+        <div class="assignment-info">
+          <span class="due-date">Due Sep 12</span>
+          <div class="card-title">Assignment 1: Data Types Worksheet</div>
+          <p class="card-text">Short worksheet identifying data types and structures across sample datasets.</p>
+        </div>
+        <a class="submit-btn" href="https://smu.instructure.com/courses/156831/assignments/1328179" target="_blank" rel="noopener">Submit →</a>
+      </div>
+
+      <div class="card assignment-card">
+        <div class="assignment-info">
+          <span class="due-date">Due Sep 26</span>
+          <div class="card-title">Assignment 2: Excel Pivot Table Report</div>
+          <p class="card-text">Build a pivot table and chart summarizing sales data from the provided spreadsheet.</p>
+        </div>
+        <a class="submit-btn" href="https://smu.instructure.com/courses/156831/assignments/1328180" target="_blank" rel="noopener">Submit →</a>
+      </div>
+
+      <div class="card assignment-card">
+        <div class="assignment-info">
+          <span class="due-date">Due Oct 10</span>
+          <div class="card-title">Assignment 3: SQL SELECT Queries</div>
+          <p class="card-text">Write and run a set of SELECT and WHERE queries against the sample MySQL database.</p>
+        </div>
+        <a class="submit-btn" href="https://smu.instructure.com/courses/156831/assignments/1328181" target="_blank" rel="noopener">Submit →</a>
+      </div>
+
+      <div class="card assignment-card">
+        <div class="assignment-info">
+          <span class="due-date">Due Oct 24</span>
+          <div class="card-title">Assignment 4: Joins & Aggregation Exercise</div>
+          <p class="card-text">Combine multiple tables using JOIN and summarize results with GROUP BY and aggregate functions.</p>
+        </div>
+        <a class="submit-btn" href="https://smu.instructure.com/courses/156831/assignments/1328183" target="_blank" rel="noopener">Submit →</a>
+      </div>
+
+      <div class="card assignment-card">
+        <div class="assignment-info">
+          <span class="due-date">Due Nov 7</span>
+          <div class="card-title">Assignment 5: Data Cleaning Challenge</div>
+          <p class="card-text">Clean a messy dataset — handle duplicates, missing values, and inconsistent formatting.</p>
+        </div>
+        <a class="submit-btn" href="https://smu.instructure.com/courses/156831/assignments/1328182" target="_blank" rel="noopener">Submit →</a>
+      </div>
+
+      <div class="card assignment-card">
+        <div class="assignment-info">
+          <span class="due-date">Due Dec 5</span>
+          <div class="card-title">Assignment 6: Capstone Analysis Report</div>
+          <p class="card-text">Final project: analyze a real-world dataset using Excel and MySQL, and submit a written report of findings.</p>
+        </div>
+        <a class="submit-btn" href="https://smu.instructure.com/courses/156831/assignments/1328184" target="_blank" rel="noopener">Submit →</a>
+      </div>
+    </section>
+
+    <!-- MATERIALS -->
+    <section id="materials" class="section">
+      <h1 class="page-title">Materials</h1>
+      <p class="page-subtitle">Readings, tutorials, and reference resources</p>
+
+      <div class="materials-grid">
+        <div class="card material-card">
+          <span class="material-type">Reading</span>
+          <div class="card-title">Data Analytics Fundamentals — Chapter 1</div>
+          <p class="card-text">Overview of data types, sources, and the analytics lifecycle.</p>
+          <a class="material-link" href="https://smu.instructure.com/courses/156831/files/13149644?module_item_id=3161894" target="_blank" rel="noopener">Open reading →</a>
+        </div>
+
+        <div class="card material-card">
+          <span class="material-type">Tutorial</span>
+          <div class="card-title">Excel Pivot Tables Walkthrough</div>
+          <p class="card-text">Step-by-step video tutorial on building pivot tables and charts.</p>
+          <a class="material-link" href="https://www.youtube.com/watch?v=dvbLrwD2SpA" target="_blank" rel="noopener">Watch tutorial →</a>
+        </div>
+
+        <div class="card material-card">
+          <span class="material-type">Cheat Sheet</span>
+          <div class="card-title">SQL Syntax Cheat Sheet</div>
+          <p class="card-text">Quick reference for SELECT, WHERE, JOIN, GROUP BY, and aggregate functions.</p>
+          <a class="material-link" href="https://smu.instructure.com/courses/156831/files/13149646?module_item_id=3161896" target="_blank" rel="noopener">View cheat sheet →</a>
+        </div>
+
+        <div class="card material-card">
+          <span class="material-type">Dataset</span>
+          <div class="card-title">Sample Sales Dataset (CSV)</div>
+          <p class="card-text">Practice dataset used in Unit 2 and Unit 4 exercises.</p>
+          <a class="material-link" href="https://smu.instructure.com/courses/156831/files/13149645?module_item_id=3161895" target="_blank" rel="noopener">Download dataset →</a>
+        </div>
+
+        <div class="card material-card">
+          <span class="material-type">Reading</span>
+          <div class="card-title">Data Cleaning Best Practices</div>
+          <p class="card-text">Guide to handling missing values, duplicates, and formatting inconsistencies.</p>
+          <a class="material-link" href="https://smu.instructure.com/courses/156831/files/13149643?module_item_id=3161893" target="_blank" rel="noopener">Open reading →</a>
+        </div>
+
+        <div class="card material-card">
+          <span class="material-type">Tutorial</span>
+          <div class="card-title">MySQL Setup Guide</div>
+          <p class="card-text">Installation and setup instructions for MySQL Workbench used throughout the course.</p>
+          <a class="material-link" href="https://smu.instructure.com/courses/156831/files/13149642?module_item_id=3161892" target="_blank" rel="noopener">View guide →</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  const navItems = document.querySelectorAll('.nav-item');
+  const sections = document.querySelectorAll('.section');
+
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const target = item.getAttribute('data-target');
+
+      navItems.forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+
+      sections.forEach(s => s.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>
