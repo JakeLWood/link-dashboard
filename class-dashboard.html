@@ -18,6 +18,7 @@
     --border: #e2e8f0;
     --text-main: #1e293b;
     --text-muted: #64748b;
+    --sidebar-width: 240px;
   }
 
   * { box-sizing: border-box; }
@@ -30,19 +31,24 @@
   }
 
   .app {
-    display: flex;
     min-height: 100vh;
   }
 
-  /* Sidebar */
+  /* Sidebar — fixed to the viewport so it never scrolls with the page */
   .sidebar {
-    width: 240px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    overflow-y: auto;
     background: var(--navy);
     color: #fff;
     padding: 28px 18px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
+    z-index: 100;
   }
 
   .sidebar .brand {
@@ -101,9 +107,9 @@
     border-top: 1px solid rgba(255,255,255,0.1);
   }
 
-  /* Main content */
+  /* Main content — offset by the fixed sidebar's width, scrolls independently */
   .main {
-    flex: 1;
+    margin-left: var(--sidebar-width);
     padding: 40px 48px;
     max-width: 1000px;
   }
@@ -286,11 +292,21 @@
   }
 
   @media (max-width: 720px) {
-    .app { flex-direction: column; }
-    .sidebar { width: 100%; flex-direction: row; align-items: center; padding: 14px 16px; overflow-x: auto; }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: auto;
+      flex-direction: row;
+      align-items: center;
+      padding: 14px 16px;
+      overflow-x: auto;
+      overflow-y: visible;
+    }
     .sidebar .brand, .sidebar .brand-sub, .sidebar-footer { display: none; }
     .nav-item { white-space: nowrap; margin-bottom: 0; }
-    .main { padding: 24px 20px; }
+    .main { margin-left: 0; margin-top: 64px; padding: 24px 20px; }
     .assignment-card { flex-direction: column; align-items: flex-start; }
   }
 </style>
